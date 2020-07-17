@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	"path/filepath"
 	"strconv"
 
 	"github.com/go-acme/lego/v3/providers/dns/duckdns"
@@ -22,15 +21,8 @@ func main() {
 	// Set up web server mux
 	mux := http.NewServeMux()
 
-	absPath, err := filepath.Abs(config.BaseDir)
-	if err != nil {
-		log.Fatalf("cannot determine absolute path for %q: %s\n", config.BaseDir, err.Error())
-	}
-
-	log.Println("Serving files from", absPath)
-
 	var s = &Server{
-		BaseDir:             config.BaseDir,
+		BaseDir:             ".",
 		DisallowDirectories: config.DisallowDirectoryListings,
 	}
 
