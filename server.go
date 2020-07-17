@@ -70,6 +70,7 @@ func (s *Server) File(filepath string, w http.ResponseWriter, r *http.Request) (
 }
 
 const templateText = `
+<title>Index of {{.Name}}</title>
 <style>
 body {
 	margin: 0 auto;
