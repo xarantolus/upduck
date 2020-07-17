@@ -42,6 +42,8 @@ func main() {
 		certmagic.DefaultACME.Email = config.LetsEncryptEmail
 		certmagic.DefaultACME.DNSProvider = provider
 
+		certmagic.HTTPPort = 0 // Choose a random aka free port for certmagics' HTTP to HTTPs redirect
+
 		log.Println("Checking in with DuckDNS")
 		err = PingDuckDNS(config.DuckDNSSite, config.DuckDNSToken)
 		if err != nil {
@@ -51,7 +53,7 @@ func main() {
 		go func() {
 			site := fmt.Sprintf("%s.duckdns.org", config.DuckDNSSite)
 
-			log.Println("HTTPs server listening on port 443 - you can access it over the external port configured in your router on", site)
+			log.Println("HTTPs server listening on port", certmagic.HTTPSPort, "- you can access it over the external port configured in your router on", site)
 			err := certmagic.HTTPS([]string{site}, mux)
 			if err != nil {
 				log.Fatalln("while running HTTPs server:", err.Error())

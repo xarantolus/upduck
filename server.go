@@ -75,6 +75,7 @@ const templateText = `
 body {
 	margin: 0 auto;
 	text-align: center;
+	font-size: 1.25em;
 }  
 a {
 	padding: 12px;

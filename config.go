@@ -88,7 +88,7 @@ func ParseConfig() (c Config, err error) {
 		cfgPath := getConfigPath()
 
 		log.Println("Saving configuration to", cfgPath)
-		log.Println("Please note that from now any program might be able to get your Email and Token from that file.")
+		log.Println("Please note that from now on any program might be able to get your Email and Token from that file.")
 
 		os.MkdirAll(filepath.Dir(cfgPath), 0644)
 
