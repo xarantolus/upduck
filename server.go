@@ -31,16 +31,20 @@ func (s *Server) Handler(w http.ResponseWriter, r *http.Request) (err error) {
 		return
 	}
 
-	p := "." + r.URL.Path // e.g. "http://server:port/test.pdf" => ""./test.pdf"
+	p := strings.TrimPrefix(r.URL.Path, "/") // e.g. "http://server:port/test.pdf" => "test.pdf"
+
+	direct := filepath.Join(s.BaseDir, p)
 
 	// Prevent urls that go back too far, e.g. someone trying to access "/../secret.pdf"
-	relPath, err := filepath.Rel(s.BaseDir, p)
+	relPath, err := filepath.Rel(s.BaseDir, direct)
 	if err != nil {
 		return
 	}
 
+	absPath := filepath.Join(s.BaseDir, relPath)
+
 	// Now, actually check the file
-	fi, err := os.Stat(relPath)
+	fi, err := os.Stat(absPath)
 	if err != nil {
 		if os.IsNotExist(err) {
 			http.NotFound(w, r)
@@ -56,11 +60,11 @@ func (s *Server) Handler(w http.ResponseWriter, r *http.Request) (err error) {
 			http.Error(w, http.StatusText(http.StatusForbidden), http.StatusForbidden)
 			return
 		}
-		return s.Directory(relPath, w, r)
+		return s.Directory(absPath, w, r)
 	}
 
 	// Handle serving files
-	return s.File(relPath, w, r)
+	return s.File(absPath, w, r)
 }
 
 // File serves the given file
@@ -112,6 +116,7 @@ func (s *Server) Directory(dirPath string, w http.ResponseWriter, r *http.Reques
 	if err != nil {
 		return
 	}
+	defer dir.Close()
 
 	// List everything in the given directory
 	infos, err := dir.Readdir(0)
@@ -139,10 +144,14 @@ func (s *Server) Directory(dirPath string, w http.ResponseWriter, r *http.Reques
 		return files[i].Name() < files[i].Name()
 	})
 
+	// If we serve the main directory, we don't show the go back link
+	var showBack = filepath.Clean(s.BaseDir) != filepath.Clean(dirPath)
+
+	dirBase := filepath.Base(dirPath)
 	w.Header().Set("Content-Type", "text/html")
 	return tmpl.Execute(w, dirListing{
-		Name:     dirPath,
-		ShowBack: strings.Trim(dirPath, "\\/") != ".",
+		Name:     dirBase,
+		ShowBack: showBack,
 		Files:    files,
 		Dirs:     dirs,
 	})

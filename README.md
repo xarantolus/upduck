@@ -13,6 +13,8 @@ $ upduck -h
 upduck, a simple HTTP and HTTPs file server
 
 Command-line flags:
+  -dir string
+        Directory that should be served (default ".")
   -disallow-listings
         Don't show directory listings
   -email string
@@ -34,6 +36,10 @@ Examples:
   Start a simple HTTP server on port 2020 that doesn't show directory listings:
 
     > upduck -p 2020 -disallow-listings
+
+  Serve files from a specific directory (default is working directory):
+
+    upduck -dir path/to/dir
 
   Start a HTTP server and a HTTPs server:
 

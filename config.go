@@ -11,8 +11,9 @@ import (
 )
 
 type Config struct {
-	ServerPort                int  `json:"server_port"`
-	DisallowDirectoryListings bool `json:"disallow_listings"`
+	ServerPort                int    `json:"server_port"`
+	BaseDir                   string `json:"dir"`
+	DisallowDirectoryListings bool   `json:"disallow_listings"`
 
 	DuckDNSToken     string `json:"duck_dns_token"`
 	DuckDNSSite      string `json:"duck_dns_site"`
@@ -21,6 +22,7 @@ type Config struct {
 
 var (
 	serverPort                = flag.Int("p", 8080, "HTTP server port")
+	baseDir                   = flag.String("dir", ".", "Directory that should be served")
 	disallowDirectoryListings = flag.Bool("disallow-listings", false, "Don't show directory listings")
 
 	letsEncryptEmail = flag.String("email", "", "Email sent to LetsEncrypt for certificate registration")
@@ -44,6 +46,10 @@ Examples:
 	Start a simple HTTP server on port 2020 that doesn't show directory listings:
 
 		> upduck -p 2020 -disallow-listings
+
+	Serve files from a specific directory (default is working directory):
+
+		upduck -dir path/to/dir
 
 	Start a HTTP server and a HTTPs server:
 
@@ -81,6 +87,7 @@ func ParseConfig() (c Config, err error) {
 		DuckDNSSite:               *duckDNSSite,
 		LetsEncryptEmail:          *letsEncryptEmail,
 		DisallowDirectoryListings: *disallowDirectoryListings,
+		BaseDir:                   *baseDir,
 	}
 
 	// If we should save this to the configuration file, we exit afterwards
@@ -128,10 +135,13 @@ func ParseConfig() (c Config, err error) {
 
 		log.Println("Loaded config file from", cfgPath)
 
-		// Now, if -p or -disallow-listings were given, we use that value instead of the saved one
+		// Now, if -p, -dir or -disallow-listings were given, we use that value instead of the saved one
 		flag.Visit(func(f *flag.Flag) {
 			if f.Name == "p" {
 				c.ServerPort = *serverPort
+			}
+			if f.Name == "dir" {
+				c.BaseDir = *baseDir
 			}
 			if f.Name == "disallow-listings" {
 				c.DisallowDirectoryListings = *disallowDirectoryListings

@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"os"
+	"path/filepath"
 	"strconv"
 
 	"github.com/go-acme/lego/v3/providers/dns/duckdns"
@@ -18,11 +20,28 @@ func main() {
 		log.Fatalln("loading configuration:", err.Error())
 	}
 
+	// Verify that config.BaseDir exists, is accessible and a directory
+	fi, err := os.Stat(config.BaseDir)
+	if err != nil {
+		log.Fatalf("error while accessing %q: %s\n", config.BaseDir, err.Error())
+	}
+
+	if !fi.IsDir() {
+		log.Fatalf("%q is not a directory\n", config.BaseDir)
+	}
+
+	abs, err := filepath.Abs(config.BaseDir)
+	if err != nil {
+		log.Fatalln("cannot determine absolute path for directory:", err.Error())
+	}
+
+	log.Println("Serving files from", abs)
+
 	// Set up web server mux
 	mux := http.NewServeMux()
 
 	var s = &Server{
-		BaseDir:             ".",
+		BaseDir:             abs,
 		DisallowDirectories: config.DisallowDirectoryListings,
 	}
 
