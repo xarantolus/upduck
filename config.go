@@ -12,6 +12,7 @@ import (
 
 type Config struct {
 	ServerPort                int    `json:"server_port"`
+	SecurePort                int    `json:"secure_port"`
 	BaseDir                   string `json:"dir"`
 	DisallowDirectoryListings bool   `json:"disallow_listings"`
 
@@ -22,6 +23,7 @@ type Config struct {
 
 var (
 	serverPort                = flag.Int("p", 8080, "HTTP server port")
+	securePort                = flag.Int("sp", 443, "HTTPS server port")
 	baseDir                   = flag.String("dir", ".", "Directory that should be served")
 	disallowDirectoryListings = flag.Bool("disallow-listings", false, "Don't show directory listings")
 
@@ -55,24 +57,22 @@ Examples:
 
 		> upduck -email your@email.com -token DuckDNSToken -site mysite
 
-		For this one, your router must forward any incoming connection on a port of your choosing to port 443 of the device upduck runs on. 
+		For this one, your router must forward any incoming connection on a port of your choosing to port 443 (or the one set with the -sp option) of the device upduck runs on. 
 		This external chosen port you set in the router must be put after the DuckDNS URL, e.g. https://mysite.duckdns.org:525/ for port 525.
 		If you're not sure about how this works, search for "port forward tutorial" and your router model/vendor.
 
-	Start a HTTP server on a custom port and a HTTPs server:
+	Start a HTTP server and a HTTPs server on custom ports:
 
-		> upduck -p 2020 -email your@email.com -token DuckDNSToken -site mysite
+		> upduck -p 2020 -sp 2121 -email your@email.com -token DuckDNSToken -site mysite
 
-		Here, the above notice also applies - ports must be forwarded in your router.
+		Here, the above notice also applies - ports (in this case 2121) must be forwarded in your router.
 
 	You can also save your configuration so you don't need to type out everything all the time. Just run it normal and add the -save flag:
 
 		> upduck -save -p 2020 -email your@email.com -token DuckDNSToken -site mysite
 
 		This will save your current command line. The next time, you will just need to run upduck without arguments to start the same configuration.
-		You can also add the -p flag without impacting your HTTPs configuration.
-
-	Setting your own HTTPs port is not possible - you can however choose the external port in your router when forwarding ports.`,
+		You can also add the -p flag without impacting your HTTPs configuration.`,
 			"\t", "  "))
 }
 
@@ -88,6 +88,7 @@ func ParseConfig() (c Config, err error) {
 		LetsEncryptEmail:          *letsEncryptEmail,
 		DisallowDirectoryListings: *disallowDirectoryListings,
 		BaseDir:                   *baseDir,
+		SecurePort:                *securePort,
 	}
 
 	// If we should save this to the configuration file, we exit afterwards
@@ -135,10 +136,13 @@ func ParseConfig() (c Config, err error) {
 
 		log.Println("Loaded config file from", cfgPath)
 
-		// Now, if -p, -dir or -disallow-listings were given, we use that value instead of the saved one
+		// Now, if -p, -sp, -dir or -disallow-listings were given, we use that value instead of the saved one
 		flag.Visit(func(f *flag.Flag) {
 			if f.Name == "p" {
 				c.ServerPort = *serverPort
+			}
+			if f.Name == "sp" {
+				c.SecurePort = *securePort
 			}
 			if f.Name == "dir" {
 				c.BaseDir = *baseDir

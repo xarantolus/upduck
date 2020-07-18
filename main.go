@@ -62,6 +62,7 @@ func main() {
 		certmagic.DefaultACME.DNSProvider = provider
 
 		certmagic.HTTPPort = 0 // Choose a random aka free port for certmagics' HTTP to HTTPs redirect
+		certmagic.HTTPSPort = config.SecurePort
 
 		log.Println("Checking in with DuckDNS")
 		err = PingDuckDNS(config.DuckDNSSite, config.DuckDNSToken)
