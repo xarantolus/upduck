@@ -65,6 +65,37 @@ Examples:
     You can also add the -p flag without impacting your HTTPs configuration.
 ```
 
+### Install
+You can either compile this program or download a release.
+
+#### Downloading
+You can [download a version for your system](https://github.com/xarantolus/upduck/releases/latest) and move it anywhere you want. It is recommended to put the executable in a directory from your [`$PATH`](https://superuser.com/a/284351).
+
+On a Raspberry Pi you would copy the link and start downloading the program:
+
+    wget https://github.com/.../upduck-raspberrypi
+
+Mark it as executable:
+
+    chmod +x upduck-raspberrypi
+
+Then move it to your `$PATH` to make it accessible everywhere:
+
+    mv upduck-raspberrypi /usr/bin/upduck
+
+Now you should be able to run `upduck` from anywhere. This is especially useful combined with using `-dir .` when [saving settings](#saving-settings) as it will serve the current directory you're in.
+
+If you want to use ports below `1024` and run `upduck` without root (sudo), you can [set the `CAP_NET_BIND_SERVICE` permission](https://stackoverflow.com/a/414258):
+
+    setcap 'cap_net_bind_service=+ep' /usr/bin/upduck
+
+#### Compiling
+Since this is a normal Go program, compiling works like this:
+
+    go build
+
+If you're compiling for another operating system, you can set environment variables. You can see the [`release.sh`](release.sh) script to see how it's done for building releases.
+
 ### Obtaining a DuckDNS domain and setting up HTTPs
 To get a DuckDNS subdomain, you'll need to register [on their site](https://www.duckdns.org) and then [create a domain](https://www.duckdns.org/domains). The prefix you type in is the `-site` parameter of your program, your token is for the `-token` option.
 
