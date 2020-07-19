@@ -143,7 +143,7 @@ func (s *Server) Directory(dirPath string, w http.ResponseWriter, r *http.Reques
 	})
 
 	sort.Slice(files, func(i, j int) bool {
-		return files[i].Name() < files[i].Name()
+		return files[i].Name() < files[j].Name()
 	})
 
 	// If we serve the main directory, we don't show the go back link
