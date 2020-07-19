@@ -73,7 +73,9 @@ func (s *Server) File(filepath string, w http.ResponseWriter, r *http.Request) (
 	return
 }
 
+// this isn't a good and correct HTML page, but it is supposed to be minimal and works in browsers
 const templateText = `
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 <title>Index of {{.Name}}</title>
 <style>
 body {
