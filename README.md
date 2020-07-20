@@ -99,7 +99,7 @@ If you're compiling for another operating system, you can set environment variab
 ### Obtaining a DuckDNS domain and setting up HTTPs
 To get a DuckDNS subdomain, you'll need to register [on their site](https://www.duckdns.org) and then [create a domain](https://www.duckdns.org/domains). The prefix you type in is the `-site` parameter of your program, your token is for the `-token` option.
 
-Now that we have the domain, we'll need to make sure the router is set up correctly. For this, you'll need to forward a port in your router to the port `443` of the device `upduck` is running on. This port will be part of your external address, e.g. `mysite.duckdns.org:port`, where `port` is a number.
+Now that we have the domain, we'll need to make sure the router is set up correctly. For this, you'll need to forward a port in your router to port `443` (or the one set with `-sp`) of the device `upduck` is running on. This port will be part of your external address, e.g. `mysite.duckdns.org:port`, where `port` is a number.
 
 When you did that, you can run `upduck` like this:
 
