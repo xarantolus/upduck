@@ -21,6 +21,7 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	err := s.Handler(w, r)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
+		log.Printf("Error handling %s %s from %s: %s\n", r.Method, r.URL.Path, r.RemoteAddr, err.Error())
 	}
 }
 
@@ -78,6 +79,10 @@ const templateText = `
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 <title>Index of {{.Name}}</title>
 <style>
+html, body {
+	background-color: #1a1a1a;
+	color: #ccc;
+}
 body {
 	margin: 0 auto;
 	text-align: center;
@@ -85,12 +90,23 @@ body {
 }  
 a {
 	padding: 12px;
+	color: #2c2;
+}
+a:hover {
+	color: #2f2;
+}
+.dl {
+	font-size:0.75em;
+}
+.dl > a {
+	padding: 0;
 }
 </style>
 
 <h2>Listing {{.Name}}</h2>
 
 <h3>Directories</h3>
+<p class="dl">You can download this directory as <a href="?format=zip">zip</a>, <a href="?format=tar">tar</a> or <a href="?format=tar.gz">tar.gz</a> file.</p> 
 {{if .ShowBack}}<p><a href="../">Go back</a></p>{{end}}
 {{range .Dirs}}
 <p><a href="{{.Name}}/">{{.Name}}</a></p>
@@ -114,47 +130,62 @@ var tmpl = template.Must(template.New("dirListing").Parse(templateText))
 
 // Directory generates a directory listing
 func (s *Server) Directory(dirPath string, w http.ResponseWriter, r *http.Request) (err error) {
-	dir, err := os.Open(dirPath)
-	if err != nil {
-		return
-	}
-	defer dir.Close()
-
-	// List everything in the given directory
-	infos, err := dir.Readdir(0)
-	if err != nil {
-		return
-	}
-
-	var dirs, files []os.FileInfo
-
-	// Put them in different lists
-	for _, f := range infos {
-		if f.IsDir() {
-			dirs = append(dirs, f)
-		} else {
-			files = append(files, f)
+	switch strings.ToUpper(r.URL.Query().Get("format")) {
+	case "ZIP":
+		w.Header().Set("Content-Type", "application/zip")
+		w.Header().Set("Content-Disposition", "attachment; filename="+filepath.Base(dirPath)+".zip")
+		return GenerateZIPFromDir(w, dirPath)
+	case "TAR":
+		w.Header().Set("Content-Type", "application/x-tar")
+		w.Header().Set("Content-Disposition", "attachment; filename="+filepath.Base(dirPath)+".tar")
+		return GenerateTARFromDir(w, dirPath)
+	case "TAR.GZ":
+		w.Header().Set("Content-Type", "application/gzip")
+		w.Header().Set("Content-Disposition", "attachment; filename="+filepath.Base(dirPath)+".tar.gz")
+		return GenerateTARGZFromDir(w, dirPath)
+	default:
+		dir, err := os.Open(dirPath)
+		if err != nil {
+			return err
 		}
+		defer dir.Close()
+
+		// List everything in the given directory
+		infos, err := dir.Readdir(0)
+		if err != nil {
+			return err
+		}
+
+		var dirs, files []os.FileInfo
+
+		// Put them in different lists
+		for _, f := range infos {
+			if f.IsDir() {
+				dirs = append(dirs, f)
+			} else {
+				files = append(files, f)
+			}
+		}
+
+		// Sort everything alphabetically
+		sort.Slice(dirs, func(i, j int) bool {
+			return dirs[i].Name() < dirs[j].Name()
+		})
+
+		sort.Slice(files, func(i, j int) bool {
+			return files[i].Name() < files[j].Name()
+		})
+
+		// If we serve the main directory, we don't show the go back link
+		var showBack = filepath.Clean(s.BaseDir) != filepath.Clean(dirPath)
+
+		dirBase := filepath.Base(dirPath)
+		w.Header().Set("Content-Type", "text/html")
+		return tmpl.Execute(w, dirListing{
+			Name:     dirBase,
+			ShowBack: showBack,
+			Files:    files,
+			Dirs:     dirs,
+		})
 	}
-
-	// Sort everything alphabetically
-	sort.Slice(dirs, func(i, j int) bool {
-		return dirs[i].Name() < dirs[j].Name()
-	})
-
-	sort.Slice(files, func(i, j int) bool {
-		return files[i].Name() < files[j].Name()
-	})
-
-	// If we serve the main directory, we don't show the go back link
-	var showBack = filepath.Clean(s.BaseDir) != filepath.Clean(dirPath)
-
-	dirBase := filepath.Base(dirPath)
-	w.Header().Set("Content-Type", "text/html")
-	return tmpl.Execute(w, dirListing{
-		Name:     dirBase,
-		ShowBack: showBack,
-		Files:    files,
-		Dirs:     dirs,
-	})
 }

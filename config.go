@@ -25,7 +25,7 @@ var (
 	serverPort                = flag.Int("p", 8080, "HTTP server port")
 	securePort                = flag.Int("sp", 443, "HTTPS server port")
 	baseDir                   = flag.String("dir", ".", "Directory that should be served")
-	disallowDirectoryListings = flag.Bool("disallow-listings", false, "Don't show directory listings")
+	disallowDirectoryListings = flag.Bool("disallow-listings", false, "Disable directory listings and downloads")
 
 	letsEncryptEmail = flag.String("email", "", "Email sent to LetsEncrypt for certificate registration")
 	duckDNSToken     = flag.String("token", "", "The token you get from duckdns.org")

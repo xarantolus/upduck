@@ -14,26 +14,26 @@ upduck, a simple HTTP and HTTPs file server
 
 Command-line flags:
   -dir string
-    	Directory that should be served (default ".")
+        Directory that should be served (default ".")
   -disallow-listings
-    	Don't show directory listings
+        Disable directory listings and downloads
   -email string
-    	Email sent to LetsEncrypt for certificate registration
+        Email sent to LetsEncrypt for certificate registration
   -p int
-    	HTTP server port (default 8080)
+        HTTP server port (default 8080)
   -save
-    	Save the given command line arguments to a config file located in your home directory
+        Save the given command line arguments to a config file located in your home directory
   -site string
-    	Your duckdns.org subdomain name, e.g. "test" for test.duckdns.org
+        Your duckdns.org subdomain name, e.g. "test" for test.duckdns.org
   -sp int
-    	HTTPS server port (default 443)
+        HTTPS server port (default 443)
   -token string
-    	The token you get from duckdns.org
+        The token you get from duckdns.org
 
 Examples:
   Start a simple HTTP server on the default port:
 
-    > upduck 
+    > upduck
 
   Start a simple HTTP server on port 2020 that doesn't show directory listings:
 
@@ -47,7 +47,7 @@ Examples:
 
     > upduck -email your@email.com -token DuckDNSToken -site mysite
 
-    For this one, your router must forward any incoming connection on a port of your choosing to port 443 (or the one set with the -sp option) of the device upduck runs on. 
+    For this one, your router must forward any incoming connection on a port of your choosing to port 443 (or the one set with the -sp option) of the device upduck runs on.
     This external chosen port you set in the router must be put after the DuckDNS URL, e.g. https://mysite.duckdns.org:525/ for port 525.
     If you're not sure about how this works, search for "port forward tutorial" and your router model/vendor.
 
