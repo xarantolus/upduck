@@ -4,16 +4,26 @@ import (
 	"archive/tar"
 	"archive/zip"
 	"compress/gzip"
+	"context"
+	"fmt"
 	"io"
 	"os"
 	"path/filepath"
 )
 
+var errCancelled = fmt.Errorf("request cancelled")
+
 // GenerateZIPFromDir generates a zip file from the given directory
-func GenerateZIPFromDir(to io.Writer, directory string) (err error) {
+func GenerateZIPFromDir(to io.Writer, directory string, ctx context.Context) (err error) {
 	zipW := zip.NewWriter(to)
 
 	err = filepath.Walk(directory, func(path string, f os.FileInfo, err error) error {
+		select {
+		case <-ctx.Done():
+			return errCancelled
+		default:
+		}
+
 		if err != nil || f.IsDir() {
 			return err
 		}
@@ -62,10 +72,16 @@ func GenerateZIPFromDir(to io.Writer, directory string) (err error) {
 }
 
 // GenerateTARFromDir generates a tar file from the given directory
-func GenerateTARFromDir(to io.Writer, directory string) (err error) {
+func GenerateTARFromDir(to io.Writer, directory string, ctx context.Context) (err error) {
 	tarW := tar.NewWriter(to)
 
 	err = filepath.Walk(directory, func(path string, f os.FileInfo, err error) error {
+		select {
+		case <-ctx.Done():
+			return errCancelled
+		default:
+		}
+
 		if err != nil || f.IsDir() {
 			return err
 		}
@@ -114,7 +130,7 @@ func GenerateTARFromDir(to io.Writer, directory string) (err error) {
 }
 
 // GenerateTARGZFromDir generates a tar.gz file from the given directory
-func GenerateTARGZFromDir(to io.Writer, directory string) (err error) {
+func GenerateTARGZFromDir(to io.Writer, directory string, ctx context.Context) (err error) {
 	w, err := gzip.NewWriterLevel(to, gzip.BestCompression) // I mean, if we want the compressed version then we probably want the best compressed version
 	if err != nil {
 		return
@@ -126,5 +142,5 @@ func GenerateTARGZFromDir(to io.Writer, directory string) (err error) {
 		}
 	}()
 
-	return GenerateTARFromDir(w, directory)
+	return GenerateTARFromDir(w, directory, ctx)
 }

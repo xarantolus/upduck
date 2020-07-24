@@ -17,11 +17,11 @@ type Server struct {
 
 // ServeHTTP implements http.Handler by wrapping Handler with error handling
 func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	log.Println(r.Method, r.URL.Path, "from", r.RemoteAddr)
+	log.Println(r.Method, r.URL.String(), "from", r.RemoteAddr)
 	err := s.Handler(w, r)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
-		log.Printf("Error handling %s %s from %s: %s\n", r.Method, r.URL.Path, r.RemoteAddr, err.Error())
+		log.Printf("Error handling %s %s from %s: %s\n", r.Method, r.URL.String(), r.RemoteAddr, err.Error())
 	}
 }
 
@@ -104,10 +104,9 @@ a:hover {
 </style>
 
 <h2>Listing {{.Name}}</h2>
-
+{{if .ShowBack}}<p><a href="../">Go back</a></p>{{end}}
 <h3>Directories</h3>
 <p class="dl">You can download this directory as <a href="?format=zip">zip</a>, <a href="?format=tar">tar</a> or <a href="?format=tar.gz">tar.gz</a> file.</p> 
-{{if .ShowBack}}<p><a href="../">Go back</a></p>{{end}}
 {{range .Dirs}}
 <p><a href="{{.Name}}/">{{.Name}}</a></p>
 {{end}}
@@ -130,19 +129,25 @@ var tmpl = template.Must(template.New("dirListing").Parse(templateText))
 
 // Directory generates a directory listing
 func (s *Server) Directory(dirPath string, w http.ResponseWriter, r *http.Request) (err error) {
+	var setDownloadHeaders = func(extension string, mimetype string) {
+		w.Header().Set("Content-Type", mimetype)
+		w.Header().Set("Content-Disposition", "attachment; filename="+filepath.Base(dirPath)+"."+extension)
+		w.Header().Set("Pragma", "public")
+		w.Header().Set("Expires", "0")
+		w.Header().Set("Cache-Control", "must-revalidate, post-check=0, pre-check=0")
+		w.Header().Set("Cache-Control", "public")
+	}
+
 	switch strings.ToUpper(r.URL.Query().Get("format")) {
 	case "ZIP":
-		w.Header().Set("Content-Type", "application/zip")
-		w.Header().Set("Content-Disposition", "attachment; filename="+filepath.Base(dirPath)+".zip")
-		return GenerateZIPFromDir(w, dirPath)
+		setDownloadHeaders("zip", "application/zip")
+		return GenerateZIPFromDir(w, dirPath, r.Context())
 	case "TAR":
-		w.Header().Set("Content-Type", "application/x-tar")
-		w.Header().Set("Content-Disposition", "attachment; filename="+filepath.Base(dirPath)+".tar")
-		return GenerateTARFromDir(w, dirPath)
+		setDownloadHeaders("tar", "application/x-tar")
+		return GenerateTARFromDir(w, dirPath, r.Context())
 	case "TAR.GZ":
-		w.Header().Set("Content-Type", "application/gzip")
-		w.Header().Set("Content-Disposition", "attachment; filename="+filepath.Base(dirPath)+".tar.gz")
-		return GenerateTARGZFromDir(w, dirPath)
+		setDownloadHeaders("tar.gz", "application/gzip")
+		return GenerateTARGZFromDir(w, dirPath, r.Context())
 	default:
 		dir, err := os.Open(dirPath)
 		if err != nil {
