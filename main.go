@@ -1,8 +1,10 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"log"
+	"net"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -73,7 +75,7 @@ func main() {
 		go func() {
 			site := fmt.Sprintf("%s.duckdns.org", config.DuckDNSSite)
 
-			log.Println("HTTPs server listening on port", certmagic.HTTPSPort, "- you can access it over the external port configured in your router on", site)
+			log.Println("Public HTTPS server listening on port", certmagic.HTTPSPort, "- access it over the external port configured in your router on", site)
 			err := certmagic.HTTPS([]string{site}, mux)
 			if err != nil {
 				log.Fatalln("while running HTTPs server:", err.Error())
@@ -82,9 +84,53 @@ func main() {
 	}
 
 	// And the normal HTTP server
-	log.Printf("HTTP server starting on port %d", config.ServerPort)
+	ext, err := externalIP()
+	if err == nil {
+		log.Printf("Local HTTP server starting on http://%s:%d", ext, config.ServerPort)
+	} else {
+		log.Printf("Local HTTP server starting on port %d", config.ServerPort)
+	}
+
 	err = http.ListenAndServe(":"+strconv.Itoa(config.ServerPort), mux)
 	if err != nil {
 		log.Fatalln("while running HTTP server:", err.Error())
 	}
+}
+
+// Source: https://stackoverflow.com/a/23558495 and https://play.golang.org/p/BDt3qEQ_2H
+func externalIP() (string, error) {
+	ifaces, err := net.Interfaces()
+	if err != nil {
+		return "", err
+	}
+	for _, iface := range ifaces {
+		if iface.Flags&net.FlagUp == 0 {
+			continue // interface down
+		}
+		if iface.Flags&net.FlagLoopback != 0 {
+			continue // loopback interface
+		}
+		addrs, err := iface.Addrs()
+		if err != nil {
+			return "", err
+		}
+		for _, addr := range addrs {
+			var ip net.IP
+			switch v := addr.(type) {
+			case *net.IPNet:
+				ip = v.IP
+			case *net.IPAddr:
+				ip = v.IP
+			}
+			if ip == nil || ip.IsLoopback() {
+				continue
+			}
+			ip = ip.To4()
+			if ip == nil {
+				continue // not an ipv4 address
+			}
+			return ip.String(), nil
+		}
+	}
+	return "", errors.New("are you connected to the network?")
 }
