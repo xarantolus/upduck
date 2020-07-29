@@ -56,11 +56,19 @@ func (s *Server) Handler(w http.ResponseWriter, r *http.Request) (err error) {
 
 	// Handle directory listings
 	if fi.IsDir() {
+		// If a directory contains index.html, we should always serve that instead
+		indexFile := filepath.Join(absPath, "index.html")
+		if _, err := os.Stat(indexFile); err == nil {
+			http.ServeFile(w, r, indexFile)
+			return nil
+		}
+
 		if s.DisallowDirectories {
 			// Listings *not* allowed
 			http.Error(w, http.StatusText(http.StatusForbidden), http.StatusForbidden)
 			return
 		}
+
 		return s.Directory(absPath, w, r)
 	}
 
