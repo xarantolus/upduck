@@ -17,7 +17,7 @@ import (
 
 func main() {
 	// Load config from flags
-	config, err := ParseConfig()
+	config, ustore, err := ParseConfig()
 	if err != nil {
 		log.Fatalln("loading configuration:", err.Error())
 	}
@@ -45,12 +45,13 @@ func main() {
 	var s = &Server{
 		BaseDir:             abs,
 		DisallowDirectories: config.DisallowDirectoryListings,
+		UserStore:           ustore,
 	}
 
 	mux.Handle("/", s)
 
 	if config.DuckDNSSite != "" && config.DuckDNSToken != "" {
-		// Set up HTTPs server
+		// Set up HTTPS server
 		cfg := duckdns.NewDefaultConfig()
 		cfg.Token = config.DuckDNSToken
 
@@ -63,7 +64,7 @@ func main() {
 		certmagic.DefaultACME.Email = config.LetsEncryptEmail
 		certmagic.DefaultACME.DNSProvider = provider
 
-		certmagic.HTTPPort = 0 // Choose a random aka free port for certmagics' HTTP to HTTPs redirect
+		certmagic.HTTPPort = 0 // Choose a random aka free port for certmagics' HTTP to HTTPS redirect
 		certmagic.HTTPSPort = config.SecurePort
 
 		log.Println("Checking in with DuckDNS")
@@ -78,7 +79,7 @@ func main() {
 			log.Println("Public HTTPS server listening on port", certmagic.HTTPSPort, "- access it over the external port configured in your router on", site)
 			err := certmagic.HTTPS([]string{site}, mux)
 			if err != nil {
-				log.Fatalln("while running HTTPs server:", err.Error())
+				log.Fatalln("while running HTTPS server:", err.Error())
 			}
 		}()
 	}

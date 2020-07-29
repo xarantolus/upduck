@@ -13,11 +13,35 @@ import (
 type Server struct {
 	BaseDir             string
 	DisallowDirectories bool
+
+	*UserStore
 }
 
-// ServeHTTP implements http.Handler by wrapping Handler with error handling
+// ServeHTTP implements http.Handler by wrapping Handler with error handling and authentication
 func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	log.Println(r.Method, r.URL.String(), "from", r.RemoteAddr)
+	// Failed login requests are not logged
+	if s.UserStore.NeedAuth() {
+		uname, pw, ok := r.BasicAuth()
+		if !ok {
+			// We need authentication
+			w.Header().Set("WWW-Authenticate", `Basic realm="Upduck login"`)
+			w.WriteHeader(http.StatusUnauthorized)
+			return
+		}
+
+		if !s.UserStore.IsValidUser(uname, pw) {
+			// Wrong Username/Password, try again
+			w.Header().Set("WWW-Authenticate", `Basic realm="Upduck login"`)
+			w.WriteHeader(http.StatusUnauthorized)
+			return
+		}
+
+		log.Printf("%s: %s %s from %s\n", uname, r.Method, r.URL.String(), r.RemoteAddr)
+	} else {
+		// Normal logging
+		log.Println(r.Method, r.URL.String(), "from", r.RemoteAddr)
+	}
+
 	err := s.Handler(w, r)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
