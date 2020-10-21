@@ -113,6 +113,62 @@ Since this is a normal Go program, compiling works like this:
 
 If you're compiling for another operating system, you can set environment variables. You can see the [`release.sh`](release.sh) script to see how it's done for building releases.
 
+<details><summary>You can also run <code>upduck</code> on Android (using <a rel="nofollow" href="https://termux.com/">Termux</a>).</summary>
+
+You likely need root though. I tested this on my phone (which has root), so I'm not 100% sure but it probably doesn't work without. It also doesn't seem to work when cross-compiling from Windows to Android, but when compiling directly on the device it's used on it works.
+
+Start by installing Termux from an app store.
+
+1. After that, you can open Termux and install Go and Git:
+
+```
+pkg install golang git
+```
+
+Now the command `go version` should output something like `go version go1.15.3 android/arm64`.
+
+2. Clone this repo and cd into it:
+
+```
+git clone https://github.com/xarantolus/Collect.git && cd upduck
+```
+
+3. Compile the program:
+
+```
+go build
+```
+
+4. Move it to your `$PATH`:
+
+```
+mv upduck ~/../usr/bin/
+```
+
+Now you can run it just like shown in the help section above.
+Please also make sure that the Termux app has the storage permission.
+
+I recommend using the [Termux Widget](https://wiki.termux.com/wiki/Termux:Widget) for `upduck`. For that, you can put scripts to start & stop this server in `~/.shortcuts/tasks`, they could like this (after configuring once with the `-save` flag):
+
+A script to start the server:
+
+`upduck`:
+```sh
+#!/usr/bin/bash
+sudo upduck -dir /storage/emulated/0 # Fill in any path you like
+```
+
+A script to stop the server running in the background:
+
+`stopduck`:
+```sh
+#!/usr/bin/bash
+sudo killall upduck
+```
+
+Now you can tap the widget any time to start/stop the server, which means that you'll never have to get up to find a cable ever again. At least when you're in a network where you configured `upduck` correctly.
+</details>
+
 ### Obtaining a DuckDNS domain and setting up HTTPS
 To get a DuckDNS subdomain, you'll need to register [on their site](https://www.duckdns.org) and then [create a domain](https://www.duckdns.org/domains). The prefix you type in is the `-site` parameter of your program, your token is for the `-token` option.
 
@@ -122,7 +178,7 @@ When you did that, you can run `upduck` like this:
 
     upduck -email your@email.com -token DuckDNSToken -site mysite
 
-The email address will be sent to [Let's Encrypt ](https://letsencrypt.org/) as part of obtaining an HTTPS certificate.
+The email address will be sent to [Let's Encrypt](https://letsencrypt.org/) as part of obtaining an HTTPS certificate.
 
 This should start a local HTTP web server on port `8080` and an HTTPS server on port `443`. The second one should receive the requests that are forwarded from your router.
 
