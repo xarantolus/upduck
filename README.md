@@ -115,7 +115,7 @@ If you're compiling for another operating system, you can set environment variab
 
 <details><summary>You can also run <code>upduck</code> on Android (using <a rel="nofollow" href="https://termux.com/">Termux</a>).</summary>
 
-You likely need root though. I tested this on my phone (which has root), so I'm not 100% sure but it probably doesn't work without. It also doesn't seem to work when cross-compiling from Windows to Android, but when compiling directly on the device it's used on it works.
+You'll likely need root though. I tested this on my phone (which has root), so I'm not 100% sure but it probably doesn't work without. It also doesn't seem to work when cross-compiling from Windows to Android, but when compiling directly on the device it's used on it works.
 
 Start by installing Termux from an app store.
 
@@ -130,7 +130,7 @@ Now the command `go version` should output something like `go version go1.15.3 a
 2. Clone this repo and cd into it:
 
 ```
-git clone https://github.com/xarantolus/Collect.git && cd upduck
+git clone https://github.com/xarantolus/upduck.git && cd upduck
 ```
 
 3. Compile the program:
@@ -148,7 +148,7 @@ mv upduck ~/../usr/bin/
 Now you can run it just like shown in the help section above.
 Please also make sure that the Termux app has the storage permission.
 
-I recommend using the [Termux Widget](https://wiki.termux.com/wiki/Termux:Widget) for `upduck`. For that, you can put scripts to start & stop this server in `~/.shortcuts/tasks`, they could like this (after configuring once with the `-save` flag):
+I recommend using the [Termux Widget](https://wiki.termux.com/wiki/Termux:Widget) for `upduck`. For that, you can put scripts to start & stop this server in `~/.shortcuts/tasks`, they could look like this (after configuring this server once with the `-save` flag):
 
 A script to start the server:
 
