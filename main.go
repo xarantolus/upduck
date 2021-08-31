@@ -10,7 +10,7 @@ import (
 	"path/filepath"
 	"strconv"
 
-	"github.com/go-acme/lego/v3/providers/dns/duckdns"
+	"github.com/libdns/duckdns"
 
 	"github.com/caddyserver/certmagic"
 )
@@ -51,18 +51,14 @@ func main() {
 	mux.Handle("/", s)
 
 	if config.DuckDNSSite != "" && config.DuckDNSToken != "" {
-		// Set up HTTPS server
-		cfg := duckdns.NewDefaultConfig()
-		cfg.Token = config.DuckDNSToken
-
-		provider, err := duckdns.NewDNSProviderConfig(cfg)
-		if err != nil {
-			log.Fatalln("setting up DuckDNS provider:", err.Error())
-		}
-
+		// Set up HTTPS certificate resolver details
 		certmagic.DefaultACME.Agreed = true
 		certmagic.DefaultACME.Email = config.LetsEncryptEmail
-		certmagic.DefaultACME.DNSProvider = provider
+		certmagic.DefaultACME.DNS01Solver = &certmagic.DNS01Solver{
+			DNSProvider: &duckdns.Provider{
+				APIToken: config.DuckDNSToken,
+			},
+		}
 
 		certmagic.HTTPPort = 0 // Choose a random aka free port for certmagics' HTTP to HTTPS redirect
 		certmagic.HTTPSPort = config.SecurePort
