@@ -1,6 +1,7 @@
 package main
 
 import (
+	"crypto/rand"
 	"crypto/sha256"
 	"crypto/subtle"
 	"encoding/hex"
@@ -34,7 +35,7 @@ func (u *UserStore) IsValidUser(user, passwd string) bool {
 		return false
 	}
 
-	return constantTimeEquals(usr.PasswordHash, hash(passwd))
+	return constantTimeEquals(usr.PasswordHash, hash(passwd, usr.PasswordSalt))
 }
 
 // Save persists the current user data to disk
@@ -89,12 +90,24 @@ func loadUsers(filepath string) (u *UserStore, err error) {
 
 type user struct {
 	PasswordHash string `json:"password_hash"`
+	PasswordSalt []byte `json:"password_salt"`
 }
 
-func hash(password string) string {
+func getSalt() []byte {
+	var s = make([]byte, 128)
+
+	_, err := rand.Read(s)
+	if err != nil {
+		panic("reading salt from random source: " + err.Error())
+	}
+
+	return s
+}
+
+func hash(password string, salt []byte) string {
 	h := sha256.New()
 
-	_, err := h.Write([]byte(password))
+	_, err := h.Write([]byte(string(salt) + password))
 	if err != nil {
 		panic(err)
 	}
@@ -103,5 +116,5 @@ func hash(password string) string {
 }
 
 func constantTimeEquals(a, b string) bool {
-	return len(a) == len(b) && subtle.ConstantTimeCompare([]byte(a), []byte(b)) == 1
+	return subtle.ConstantTimeCompare([]byte(a), []byte(b)) == 1
 }

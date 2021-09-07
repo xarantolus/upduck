@@ -143,9 +143,11 @@ func ParseConfig() (c Config, ustore *UserStore, err error) {
 				log.Fatalln("Password must be given")
 			}
 
+			salt := getSalt()
 			// Add (or replace) that user in the user store
 			ustore.Users[uname] = user{
-				PasswordHash: hash(passwd),
+				PasswordHash: hash(passwd, salt),
+				PasswordSalt: salt,
 			}
 
 			err = ustore.Save()
