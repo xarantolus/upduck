@@ -6,7 +6,7 @@ Upduck is a simple HTTP and HTTPS static file server that integrates with [DuckD
 **Disclaimer**: Using this program with the `-email` flag signifies your acceptance to the [Let's Encrypt's Subscriber Agreement and/or Terms of Service](https://letsencrypt.org/repository/).
 
 ### How to use
-The help section of the program tries to be as helpful as possible:
+The help section of the program tries to be as helpful as possible, make sure you read the section with examples:
 
 ```
 $ upduck -h
@@ -88,19 +88,20 @@ You can either compile this program or download a release.
 #### Downloading
 You can [download a version for your system](https://github.com/xarantolus/upduck/releases/latest) and move it anywhere you want. It is recommended to put the executable in a directory from your [`$PATH`](https://superuser.com/a/284351).
 
-On a Raspberry Pi you would copy the link and start downloading the program:
+On a Raspberry Pi the following command should download the right executable:
 
-    wget https://github.com/.../upduck-raspberrypi
+    arch=$(uname -m) && wget -O upduck "https://github.com/xarantolus/upduck/releases/latest/download/upduck-raspberrypi-${arch%l}"
+
 
 Mark it as executable:
 
-    chmod +x upduck-raspberrypi
+    chmod +x upduck
 
 Then move it to your `$PATH` to make it accessible everywhere:
 
-    mv upduck-raspberrypi /usr/bin/upduck
+    mv upduck /usr/bin/upduck
 
-Now you should be able to run `upduck` from anywhere. This is especially useful combined with using `-dir .` when [saving settings](#saving-settings) as it will serve the current directory you're in.
+Now you should be able to run `upduck` from anywhere. This is especially useful if you set `-dir .` while [saving settings](#saving-settings), as now it always serves directory you're currently in.
 
 If you want to use ports below `1024` and run `upduck` without root (sudo), you can [set the `CAP_NET_BIND_SERVICE` permission](https://stackoverflow.com/a/414258):
 
